@@ -26,6 +26,25 @@ func ExampleClassifier() {
 	// b -77.08392035747161
 }
 
+func ExampleClassifier_probScore() {
+	classifier := bayes.NewClassifier[string, int](bayes.OptionProbScore)
+
+	classifier.Train(maps.All(map[string][]int{
+		"a": {7, 8, 9, 6},
+		"c": {1, 2, 3, 4},
+		"b": {4, 5, 6, 7},
+	}))
+
+	for key, val := range classifier.Scores([]int{1, 2, 3}) {
+		fmt.Println(key, val)
+	}
+
+	// Output:
+	// c 1
+	// a 9.999999999999999e-34
+	// b 9.999999999999999e-34
+}
+
 func ExampleClassifier_laplaceSmoothing() {
 	classifier := bayes.NewClassifier[string, int](bayes.OptionLaplaceSmoothing)
 

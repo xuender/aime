@@ -6,7 +6,7 @@ const _defaultProb = 0.00000000001
 
 type Prob[V cmp.Ordered] struct {
 	count  map[V]float64
-	Total  float64
+	total  float64
 	sum    float64
 	prober func(V) float64
 }
@@ -25,9 +25,17 @@ func NewProb[V cmp.Ordered](opts ...Option[V]) *Prob[V] {
 	return ret
 }
 
-func (p *Prob[V]) Add(val V) {
-	p.count[val]++
-	p.sum++
+func (p *Prob[V]) Total() float64 {
+	return p.total
+}
+
+func (p *Prob[V]) Add(items []V) {
+	for _, item := range items {
+		p.count[item]++
+	}
+
+	p.sum += float64(len(items))
+	p.total++
 }
 
 func (p *Prob[V]) Prob(val V) float64 {
@@ -40,13 +48,13 @@ func (p *Prob[V]) defaultProb(val V) float64 {
 		return _defaultProb
 	}
 
-	return count / float64(p.Total)
+	return count / float64(p.total)
 }
 
 func (p *Prob[V]) laplaceSmoothing(val V) float64 {
 	count, has := p.count[val]
 	if has {
-		return count + 1/(p.sum+p.Total)
+		return count + 1/(p.sum+p.total)
 	}
 
 	return _defaultProb
