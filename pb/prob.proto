@@ -1,0 +1,16 @@
+syntax = "proto3";
+package pb;
+option go_package = "./pb";
+// Prob message.
+message Prob {
+	double Total = 1;
+	double Sum = 2;
+	repeated double Values = 3;
+	repeated int32 CountInt32 = 4;
+	repeated int64 CountInt64 = 5;
+	repeated uint32 CountUint32 = 6;
+	repeated uint64 CountUint64 = 7;
+	repeated float CountFloat = 8;
+	repeated double CountDouble = 9;
+	repeated string CountString = 10;
+}

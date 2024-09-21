@@ -6,6 +6,7 @@ import (
 	"maps"
 	"math"
 
+	"github.com/xuender/aime/pb"
 	"github.com/xuender/aime/prob"
 	"github.com/xuender/flow"
 	"github.com/xuender/flow/seq"
@@ -15,22 +16,23 @@ import (
 var _none = struct{}{}
 
 type Classifier[C, V cmp.Ordered] struct {
-	probabilities map[C]float64
-	probs         map[C]*prob.Prob[V]
-	vocabulary    map[V]struct{}
-	learned       float64
-	probOptions   []prob.Option[V]
-	minProb       float64
-	scorer        func([]V, map[C]float64)
+	// Prior Probability.
+	prior       map[C]float64
+	probs       map[C]*prob.Prob[V]
+	values      map[V]struct{}
+	learned     float64
+	probOptions []prob.Option[V]
+	minProb     float64
+	scorer      func([]V, map[C]float64)
 }
 
 func NewClassifier[C, V cmp.Ordered](opts ...Option[C, V]) *Classifier[C, V] {
 	ret := &Classifier[C, V]{
-		probabilities: map[C]float64{},
-		probs:         map[C]*prob.Prob[V]{},
-		vocabulary:    map[V]struct{}{},
-		probOptions:   []prob.Option[V]{},
-		minProb:       -2,
+		prior:       map[C]float64{},
+		probs:       map[C]*prob.Prob[V]{},
+		values:      map[V]struct{}{},
+		probOptions: []prob.Option[V]{},
+		minProb:     -2,
 	}
 
 	ret.scorer = ret.logScore
@@ -55,17 +57,17 @@ func (p *Classifier[C, V]) Train(seq iter.Seq2[C, []V]) {
 		val.Add(items)
 
 		for _, item := range items {
-			p.vocabulary[item] = _none
+			p.values[item] = _none
 		}
 	}
 
 	for class, val := range p.probs {
-		p.probabilities[class] = val.Total() / p.learned
+		p.prior[class] = val.Total() / p.learned
 	}
 }
 
 func (p *Classifier[C, V]) Scores(items []V) iter.Seq2[C, float64] {
-	num := len(p.probabilities)
+	num := len(p.prior)
 	scores := make(map[C]float64, num)
 
 	p.scorer(items, scores)
@@ -84,7 +86,7 @@ func (p *Classifier[C, V]) Scores(items []V) iter.Seq2[C, float64] {
 }
 
 func (p *Classifier[C, V]) logScore(items []V, scores map[C]float64) {
-	for class, score := range p.probabilities {
+	for class, score := range p.prior {
 		val := p.probs[class]
 		score = math.Log(score)
 
@@ -99,7 +101,7 @@ func (p *Classifier[C, V]) logScore(items []V, scores map[C]float64) {
 func (p *Classifier[C, V]) probScore(items []V, scores map[C]float64) {
 	var sum float64
 
-	for class, score := range p.probabilities {
+	for class, score := range p.prior {
 		val := p.probs[class]
 
 		for _, item := range items {
@@ -117,7 +119,7 @@ func (p *Classifier[C, V]) probScore(items []V, scores map[C]float64) {
 
 func (p *Classifier[C, V]) Predict(items []V) (C, bool) {
 	class, prod, has := seq.Reduce2(flow.Chain2(
-		maps.All(p.probabilities),
+		maps.All(p.prior),
 		flow.Map2(func(class C, val float64) (C, float64) {
 			score := math.Log(val)
 
@@ -142,3 +144,59 @@ func (p *Classifier[C, V]) Predict(items []V) (C, bool) {
 
 	return class, has
 }
+
+// nolint: cyclop
+func (p *Classifier[C, V]) Proto() *pb.Classifier {
+	msg := &pb.Classifier{
+		Learned: p.learned,
+		MinProb: p.minProb,
+	}
+
+	for class, prior := range p.prior {
+		msg.Prior = append(msg.Prior, prior)
+		msg.Prob = append(msg.Prob, p.probs[class].Proto())
+
+		switch val := any(class).(type) {
+		case int32:
+			msg.ClassInt32 = append(msg.ClassInt32, val)
+		case int64:
+			msg.ClassInt64 = append(msg.ClassInt64, val)
+		case uint32:
+			msg.ClassUint32 = append(msg.ClassUint32, val)
+		case uint64:
+			msg.ClassUint64 = append(msg.ClassUint64, val)
+		case float32:
+			msg.ClassFloat = append(msg.ClassFloat, val)
+		case float64:
+			msg.ClassDouble = append(msg.ClassDouble, val)
+		case string:
+			msg.ClassString = append(msg.ClassString, val)
+		}
+	}
+
+	for value := range p.values {
+		switch val := any(value).(type) {
+		case int32:
+			msg.ValueInt32 = append(msg.ValueInt32, val)
+		case int64:
+			msg.ValueInt64 = append(msg.ValueInt64, val)
+		case uint32:
+			msg.ValueUint32 = append(msg.ValueUint32, val)
+		case uint64:
+			msg.ValueUint64 = append(msg.ValueUint64, val)
+		case float32:
+			msg.ValueFloat = append(msg.ValueFloat, val)
+		case float64:
+			msg.ValueDouble = append(msg.ValueDouble, val)
+		case string:
+			msg.ValueString = append(msg.ValueString, val)
+		}
+	}
+
+	return msg
+}
+
+// func (p *Classifier[C, V]) Unmarshal(msg *pb.Classifier) {
+// 	proto.Marshal()
+// 	proto.Unmarshal()
+// }

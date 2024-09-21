@@ -1,0 +1,27 @@
+syntax = "proto3";
+package pb;
+option go_package = "./pb";
+import "pb/prob.proto";
+// Classifier Message.
+message Classifier {
+	double learned = 1;
+	double minProb = 2;
+	repeated int32 ClassInt32 = 4;
+	repeated int64 ClassInt64 = 5;
+	repeated uint32 ClassUint32 = 6;
+	repeated uint64 ClassUint64 = 7;
+	repeated float ClassFloat = 8;
+	repeated double ClassDouble = 9;
+	repeated string ClassString = 10;
+
+	repeated double prior = 11;
+	repeated Prob prob = 12;
+
+	repeated int32 ValueInt32 = 13;
+	repeated int64 ValueInt64 = 14;
+	repeated uint32 ValueUint32 = 15;
+	repeated uint64 ValueUint64 = 16;
+	repeated float ValueFloat = 17;
+	repeated double ValueDouble = 18;
+	repeated string ValueString = 19;
+}

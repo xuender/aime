@@ -19,3 +19,6 @@ test:
 
 watch-test:
 	reflex -t 50ms -s -- sh -c 'go test -v ./...'
+
+proto:
+	protoc --go_out=. pb/*.proto
