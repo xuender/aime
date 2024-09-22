@@ -29,43 +29,44 @@ func NewProb[V cmp.Ordered](opts ...Option[V]) *Prob[V] {
 	return ret
 }
 
+// nolint
 func Load[V cmp.Ordered](input *pb.Prob) *Prob[V] {
 	ret := NewProb[V]()
 	ret.total = input.GetTotal()
 	ret.sum = input.GetSum()
 
-	// var zero V
+	var zero V
 
-	// switch any(zero).(type) {
-	// case int32:
-	// 	for idx, val := range input.CountInt32 {
-	// 		ret.count[V(val)] = input.Values[idx]
-	// 	}
-	// case int64:
-	// 	for idx, val := range input.CountInt64 {
-	// 		ret.count[V(val)] = input.Values[idx]
-	// 	}
-	// case uint32:
-	// 	for idx, val := range input.CountUint32 {
-	// 		ret.count[V(val)] = input.Values[idx]
-	// 	}
-	// case uint64:
-	// 	for idx, val := range input.CountUint32 {
-	// 		ret.count[V(val)] = input.Values[idx]
-	// 	}
-	// case float32:
-	// 	for idx, val := range input.CountFloat {
-	// 		ret.count[V(val)] = input.Values[idx]
-	// 	}
-	// case float64:
-	// 	for idx, val := range input.CountDouble {
-	// 		ret.count[V(val)] = input.Values[idx]
-	// 	}
-	// case string:
-	// 	for idx, val := range input.CountString {
-	// 		ret.count[V(val)] = input.Values[idx]
-	// 	}
-	// }
+	switch any(zero).(type) {
+	case int32:
+		for idx, val := range input.GetValues() {
+			ret.count[any(input.GetCountInt32()[idx]).(V)] = val
+		}
+	case int64:
+		for idx, val := range input.GetValues() {
+			ret.count[any(input.GetCountInt64()[idx]).(V)] = val
+		}
+	case uint32:
+		for idx, val := range input.GetValues() {
+			ret.count[any(input.GetCountUint32()[idx]).(V)] = val
+		}
+	case uint64:
+		for idx, val := range input.GetValues() {
+			ret.count[any(input.GetCountUint64()[idx]).(V)] = val
+		}
+	case float32:
+		for idx, val := range input.GetValues() {
+			ret.count[any(input.GetCountFloat()[idx]).(V)] = val
+		}
+	case float64:
+		for idx, val := range input.GetValues() {
+			ret.count[any(input.GetCountDouble()[idx]).(V)] = val
+		}
+	case string:
+		for idx, val := range input.GetValues() {
+			ret.count[any(input.GetCountString()[idx]).(V)] = val
+		}
+	}
 
 	return ret
 }
@@ -105,6 +106,7 @@ func (p *Prob[V]) laplaceSmoothing(val V) float64 {
 	return _defaultProb
 }
 
+// nolint
 func (p *Prob[V]) Proto() *pb.Prob {
 	msg := &pb.Prob{
 		Total: p.total,
@@ -115,24 +117,43 @@ func (p *Prob[V]) Proto() *pb.Prob {
 		return msg
 	}
 
-	for key, count := range p.count {
-		msg.Values = append(msg.Values, count)
+	var zero V
 
-		switch val := any(key).(type) {
-		case int32:
-			msg.CountInt32 = append(msg.CountInt32, val)
-		case int64:
-			msg.CountInt64 = append(msg.CountInt64, val)
-		case uint32:
-			msg.CountUint32 = append(msg.CountUint32, val)
-		case uint64:
-			msg.CountUint64 = append(msg.CountUint64, val)
-		case float32:
-			msg.CountFloat = append(msg.CountFloat, val)
-		case float64:
-			msg.CountDouble = append(msg.CountDouble, val)
-		case string:
-			msg.CountString = append(msg.CountString, val)
+	switch any(zero).(type) {
+	case int32:
+		for key, count := range p.count {
+			msg.Values = append(msg.Values, count)
+			msg.CountInt32 = append(msg.CountInt32, any(key).(int32))
+		}
+	case int64:
+		for key, count := range p.count {
+			msg.Values = append(msg.Values, count)
+			msg.CountInt64 = append(msg.CountInt64, any(key).(int64))
+		}
+	case uint32:
+		for key, count := range p.count {
+			msg.Values = append(msg.Values, count)
+			msg.CountUint32 = append(msg.CountUint32, any(key).(uint32))
+		}
+	case uint64:
+		for key, count := range p.count {
+			msg.Values = append(msg.Values, count)
+			msg.CountUint64 = append(msg.CountUint64, any(key).(uint64))
+		}
+	case float32:
+		for key, count := range p.count {
+			msg.Values = append(msg.Values, count)
+			msg.CountFloat = append(msg.CountFloat, any(key).(float32))
+		}
+	case float64:
+		for key, count := range p.count {
+			msg.Values = append(msg.Values, count)
+			msg.CountDouble = append(msg.CountDouble, any(key).(float64))
+		}
+	case string:
+		for key, count := range p.count {
+			msg.Values = append(msg.Values, count)
+			msg.CountString = append(msg.CountString, any(key).(string))
 		}
 	}
 
