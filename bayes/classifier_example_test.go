@@ -105,3 +105,14 @@ func ExampleClassifier_Predict() {
 	// Output:
 	// c true
 }
+
+func ExampleClassifier_Proto() {
+	class := bayes.NewClassifier[int, int]()
+	class.Train(maps.All(map[int][]int{1: {1, 2, 3}, 2: {3, 3}, 3: {4, 5}}))
+
+	newClass := bayes.Load[int, int](class.Proto())
+	fmt.Println(newClass.Learned())
+
+	// Output:
+	// 3
+}

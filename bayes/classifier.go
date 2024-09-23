@@ -44,6 +44,88 @@ func NewClassifier[C, V cmp.Ordered](opts ...Option[C, V]) *Classifier[C, V] {
 	return ret
 }
 
+func (p *Classifier[C, V]) Learned() float64 {
+	return p.learned
+}
+
+func Load[C, V cmp.Ordered](input *pb.Classifier) *Classifier[C, V] {
+	var (
+		zeroV V
+		zeroC C
+	)
+
+	ret := NewClassifier[C, V]()
+	ret.learned = input.GetLearned()
+	ret.minProb = input.MinProb
+
+	switch any(zeroV).(type) {
+	case int32:
+		for _, val := range input.GetValueInt32() {
+			ret.values[any(val).(V)] = _none
+		}
+	case int64:
+		for _, val := range input.GetValueInt64() {
+			ret.values[any(val).(V)] = _none
+		}
+	case uint64:
+		for _, val := range input.GetValueUint64() {
+			ret.values[any(val).(V)] = _none
+		}
+	case float32:
+		for _, val := range input.GetValueFloat() {
+			ret.values[any(val).(V)] = _none
+		}
+	case float64:
+		for _, val := range input.GetValueDouble() {
+			ret.values[any(val).(V)] = _none
+		}
+	case string:
+		for _, val := range input.GetValueString() {
+			ret.values[any(val).(V)] = _none
+		}
+	}
+
+	switch any(zeroC).(type) {
+	case int32:
+		for idx, class := range input.GetClassInt32() {
+			key := any(class).(C)
+			ret.prior[key] = input.GetPrior()[idx]
+			ret.probs[key] = prob.Load[V](input.GetProb()[idx])
+		}
+	case int64:
+		for idx, class := range input.GetClassInt64() {
+			key := any(class).(C)
+			ret.prior[key] = input.GetPrior()[idx]
+			ret.probs[key] = prob.Load[V](input.GetProb()[idx])
+		}
+	case uint64:
+		for idx, class := range input.GetClassUint64() {
+			key := any(class).(C)
+			ret.prior[key] = input.GetPrior()[idx]
+			ret.probs[key] = prob.Load[V](input.GetProb()[idx])
+		}
+	case float32:
+		for idx, class := range input.GetClassFloat() {
+			key := any(class).(C)
+			ret.prior[key] = input.GetPrior()[idx]
+			ret.probs[key] = prob.Load[V](input.GetProb()[idx])
+		}
+	case float64:
+		for idx, class := range input.GetClassDouble() {
+			key := any(class).(C)
+			ret.prior[key] = input.GetPrior()[idx]
+			ret.probs[key] = prob.Load[V](input.GetProb()[idx])
+		}
+	case string:
+		for idx, class := range input.GetClassString() {
+			key := any(class).(C)
+			ret.prior[key] = input.GetPrior()[idx]
+			ret.probs[key] = prob.Load[V](input.GetProb()[idx])
+		}
+	}
+	return ret
+}
+
 func (p *Classifier[C, V]) Train(seq iter.Seq2[C, []V]) {
 	for class, items := range seq {
 		p.learned++
